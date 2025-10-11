@@ -1,0 +1,12 @@
+include README.md
+include QUICKSTART.md
+include API.md
+include INSTALL.md
+include LICENSE
+include requirements.txt
+include main.ipynb
+recursive-include duplicity *.py
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store
+
