@@ -6,7 +6,10 @@ By: Peter Banyas, Shristi Sharma, Alistair Simmons, Atharva Vispute *(the Duke P
 
 Get started fast with main.ipynb!
 
-Or see our more user-friendly app at https://v0-llm-comparison-webapp.vercel.app/
+## Paper & App
+Check out our preprint here: https://arxiv.org/pdf/2510.13852
+
+Use our user-friendly web app here: https://v0-llm-comparison-webapp.vercel.app/
 
 ## Overview
 
