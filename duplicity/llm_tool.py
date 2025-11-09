@@ -231,11 +231,18 @@ class LLMComparisonTool:
                 "Content-Type": "application/json"
             }
             
+            # gpt-5-nano-2025-08-07 requires max_completion_tokens instead of max_tokens
+            model_name = get_model_name_from_spec(model_spec)
             data = {
-                "model": get_model_name_from_spec(model_spec),
+                "model": model_name,
                 "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 1000
             }
+
+            # Special case for gpt-5-nano-2025-08-07
+            if model_name == "gpt-5-nano-2025-08-07":
+                data["max_completion_tokens"] = 1000
+            else:
+                data["max_tokens"] = 1000
             
             async with self.session.post(
                 "https://api.openai.com/v1/chat/completions",

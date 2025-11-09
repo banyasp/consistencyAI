@@ -21,6 +21,9 @@ Core modules:
 __version__ = "1.0.0"
 __author__ = "Peter Banyas, Shristi Sharma, Alistair Simmons, Atharva Vispute"
 
+# Import config module for API key management
+from . import config
+
 from .llm_tool import (
     LLMResponse,
     LLMComparisonTool,
@@ -102,7 +105,10 @@ __all__ = [
     # Version info
     "__version__",
     "__author__",
-    
+
+    # Configuration
+    "config",
+
     # LLM Tool
     "LLMResponse",
     "LLMComparisonTool",

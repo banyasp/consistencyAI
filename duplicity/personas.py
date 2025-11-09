@@ -73,7 +73,7 @@ def get_and_clean_personas(offset: int = 0, length: int = 100, cache: bool = Tru
     """
 
     url = (
-        "https://datasets-server.huggingface.co/rows?dataset=nvidia%2FNemotron-Personas&config=default&split=train"
+        "https://datasets-server.huggingface.co/rows?dataset=nvidia%2FNemotron-Personas-USA&config=default&split=train"
         f"&offset={offset}&length={length}"
     )
     try:
