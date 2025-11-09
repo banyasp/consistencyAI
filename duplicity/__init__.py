@@ -86,6 +86,17 @@ from .central_analysis import (
     compute_central_analysis,
     print_central_analysis_summary,
 )
+from .control_experiment import (
+    load_mary_alberti_persona,
+    generate_control_queries,
+    run_control_experiment,
+)
+from .variance_analysis import (
+    compute_within_model_variance,
+    compute_across_persona_variance,
+    create_variance_comparison_visualizations,
+    generate_variance_report,
+)
 
 __all__ = [
     # Version info
@@ -156,5 +167,16 @@ __all__ = [
     # Central Analysis
     "compute_central_analysis",
     "print_central_analysis_summary",
+
+    # Control Experiment
+    "load_mary_alberti_persona",
+    "generate_control_queries",
+    "run_control_experiment",
+
+    # Variance Analysis
+    "compute_within_model_variance",
+    "compute_across_persona_variance",
+    "create_variance_comparison_visualizations",
+    "generate_variance_report",
 ]
 

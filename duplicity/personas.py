@@ -11,29 +11,36 @@ from datetime import datetime
 from pathlib import Path
 
 
-def _logs_dir() -> str:
-    """Return absolute path to the project's logs directory."""
+def _logs_dir(subdir: str = "") -> str:
+    """Return absolute path to the project's logs directory.
+
+    Args:
+        subdir: Subdirectory within logs (e.g., "main", "control")
+    """
     # duplib/ -> duplicity/
     project_root = Path(__file__).resolve().parent.parent
-    logs_path = project_root / "logs"
+    if subdir:
+        logs_path = project_root / "logs" / subdir
+    else:
+        logs_path = project_root / "logs"
     logs_path.mkdir(parents=True, exist_ok=True)
     return str(logs_path)
 
 
-def save_personas_log(personas_dict: Dict, offset: int = 0, length: int = 100, tag: Optional[str] = None) -> str:
+def save_personas_log(personas_dict: Dict, offset: int = 0, length: int = 100, tag: Optional[str] = None, subdir: str = "") -> str:
     """Persist personas to logs as JSON and return the saved file path."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     tag_part = f"_{tag}" if tag else ""
     filename = f"personas_{timestamp}_off{offset}_len{length}{tag_part}.json"
-    path = os.path.join(_logs_dir(), filename)
+    path = os.path.join(_logs_dir(subdir), filename)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(personas_dict, f, indent=2)
     return path
 
 
-def list_cached_personas() -> List[str]:
+def list_cached_personas(subdir: str = "") -> List[str]:
     """List cached persona JSON files (sorted newest first)."""
-    logs_path = Path(_logs_dir())
+    logs_path = Path(_logs_dir(subdir))
     files = sorted(logs_path.glob("personas_*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
     return [str(p) for p in files]
 
@@ -44,18 +51,25 @@ def load_personas_from_log(filepath: str) -> Dict:
         return json.load(f)
 
 
-def load_latest_personas() -> Optional[Dict]:
+def load_latest_personas(subdir: str = "") -> Optional[Dict]:
     """Load the most recent cached personas if present; otherwise return None."""
-    files = list_cached_personas()
+    files = list_cached_personas(subdir)
     if not files:
         return None
     return load_personas_from_log(files[0])
 
 
-def get_and_clean_personas(offset: int = 0, length: int = 100, cache: bool = True, tag: Optional[str] = None) -> Dict:
+def get_and_clean_personas(offset: int = 0, length: int = 100, cache: bool = True, tag: Optional[str] = None, subdir: str = "") -> Dict:
     """Fetch and clean persona data from the Hugging Face dataset.
 
     If cache=True, persist the cleaned personas into `duplicity/logs`.
+
+    Args:
+        offset: Starting offset in the dataset
+        length: Number of personas to fetch
+        cache: Whether to save to disk
+        tag: Optional tag for the filename
+        subdir: Subdirectory within logs (e.g., "main", "control")
     """
 
     url = (
@@ -97,7 +111,7 @@ def get_and_clean_personas(offset: int = 0, length: int = 100, cache: bool = Tru
             final_personas_dict["rows"].append(persona_entry)
 
     if cache:
-        save_personas_log(final_personas_dict, offset=offset, length=length, tag=tag)
+        save_personas_log(final_personas_dict, offset=offset, length=length, tag=tag, subdir=subdir)
 
     return final_personas_dict
 

@@ -149,9 +149,17 @@ def supercompute_similarities(results: Dict[str, Dict[str, Dict[str, str]]]):
     return all_similarity_matrices, all_similarity_dfs, all_sorted_personas, all_embeddings
 
 
-def _logs_dir() -> str:
+def _logs_dir(subdir: str = "") -> str:
+    """Return absolute path to the project's logs directory.
+
+    Args:
+        subdir: Subdirectory within logs (e.g., "main", "control")
+    """
     project_root = Path(__file__).resolve().parent.parent
-    logs_path = project_root / "logs"
+    if subdir:
+        logs_path = project_root / "logs" / subdir
+    else:
+        logs_path = project_root / "logs"
     logs_path.mkdir(parents=True, exist_ok=True)
     return str(logs_path)
 
@@ -162,12 +170,13 @@ def save_similarity_results(
     all_sorted_personas: Dict[str, Dict[str, List[int]]],
     all_embeddings: Dict[str, Dict[str, np.ndarray]],
     tag: Optional[str] = None,
+    subdir: str = ""
 ) -> str:
     """Save the full similarity computation bundle to a pickle file in logs/ and return the path."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     tag_part = f"_{tag}" if tag else ""
     filename = f"similarities_{timestamp}{tag_part}.pkl"
-    path = os.path.join(_logs_dir(), filename)
+    path = os.path.join(_logs_dir(subdir), filename)
     bundle = {
         "all_similarity_matrices": all_similarity_matrices,
         "all_similarity_dfs": all_similarity_dfs,
@@ -179,8 +188,8 @@ def save_similarity_results(
     return path
 
 
-def list_cached_similarity_results() -> List[str]:
-    logs_path = Path(_logs_dir())
+def list_cached_similarity_results(subdir: str = "") -> List[str]:
+    logs_path = Path(_logs_dir(subdir))
     files = sorted(logs_path.glob("similarities_*.pkl"), key=lambda p: p.stat().st_mtime, reverse=True)
     return [str(p) for p in files]
 
@@ -196,8 +205,8 @@ def load_similarity_results(filepath: str):
     )
 
 
-def load_latest_similarity_results():
-    files = list_cached_similarity_results()
+def load_latest_similarity_results(subdir: str = ""):
+    files = list_cached_similarity_results(subdir)
     if not files:
         return None
     return load_similarity_results(files[0])

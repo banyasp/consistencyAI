@@ -21,17 +21,24 @@ from dataclasses import dataclass
 from .llm_tool import LLMComparisonTool
 
 
-def _logs_dir() -> str:
-    """Return absolute path to the project's logs directory."""
+def _logs_dir(subdir: str = "") -> str:
+    """Return absolute path to the project's logs directory.
+
+    Args:
+        subdir: Subdirectory within logs (e.g., "main", "control")
+    """
     project_root = Path(__file__).resolve().parent.parent
-    logs_path = project_root / "logs"
+    if subdir:
+        logs_path = project_root / "logs" / subdir
+    else:
+        logs_path = project_root / "logs"
     logs_path.mkdir(parents=True, exist_ok=True)
     return str(logs_path)
 
 
-def _incremental_logs_dir() -> str:
+def _incremental_logs_dir(subdir: str = "") -> str:
     """Return absolute path to the incremental logs directory."""
-    incremental_path = Path(_logs_dir()) / "incremental"
+    incremental_path = Path(_logs_dir(subdir)) / "incremental"
     incremental_path.mkdir(parents=True, exist_ok=True)
     return str(incremental_path)
 
@@ -67,12 +74,14 @@ class FastRobustQueryProcessor:
         save_incremental: bool = True,
         incremental_interval: int = 1,
         start_batch_number: int = 1,
-        initial_incremental_counter: int = 0
+        initial_incremental_counter: int = 0,
+        subdir: str = ""
     ):
         self.initial_batch_size = initial_batch_size
         self.initial_concurrency = initial_concurrency
         self.max_concurrency = max_concurrency
         self.min_concurrency = min_concurrency
+        self.subdir = subdir
         self.adaptive_mode = adaptive_mode
         self.save_progress = save_progress
         self.max_retries = max_retries
@@ -131,7 +140,7 @@ class FastRobustQueryProcessor:
             # Create filename with counter and stage (adjust for start_batch_number)
             actual_batch_num = batch_num + self.start_batch_number
             filename = f"{self.incremental_base_filename}_batch{actual_batch_num:03d}_{stage}_{self.incremental_counter:03d}.json"
-            filepath = Path(_incremental_logs_dir()) / filename
+            filepath = Path(_incremental_logs_dir(self.subdir)) / filename
             
             # Prepare incremental data
             incremental_data = {
@@ -173,7 +182,7 @@ class FastRobustQueryProcessor:
             
         if not self.progress_file:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            self.progress_file = Path(_logs_dir()) / f"fast_progress_{timestamp}.json"
+            self.progress_file = Path(_logs_dir(self.subdir)) / f"fast_progress_{timestamp}.json"
         
         # Calculate ETA
         elapsed_time = time.time() - self.start_time
@@ -631,7 +640,7 @@ class FastRobustQueryProcessor:
         print(f"   Incremental saving: {self.save_incremental}")
         if self.save_incremental:
             print(f"   Incremental interval: Every {self.incremental_interval} batch(es)")
-            print(f"   Incremental folder: {_incremental_logs_dir()}")
+            print(f"   Incremental folder: {_incremental_logs_dir(self.subdir)}")
         
         # Create dynamic batch system
         total_batches = self._create_batches(queries, models)
@@ -841,7 +850,7 @@ class FastRobustQueryProcessor:
         print(f"   Max retries reached: {self.metrics.max_retries_reached}")
         
         if self.save_incremental:
-            print(f"   Incremental files saved: {self.incremental_counter} files in {_incremental_logs_dir()}")
+            print(f"   Incremental files saved: {self.incremental_counter} files in {_incremental_logs_dir(self.subdir)}")
         
         if self.ensure_100_percent_success:
             success_rate = successful_queries / total_queries if total_queries > 0 else 0
@@ -914,7 +923,7 @@ class FastRobustQueryProcessor:
 
 
 def query_llm_fast(
-    nested_queries: Dict[str, Dict[str, str]], 
+    nested_queries: Dict[str, Dict[str, str]],
     list_of_models: List[str],
     initial_batch_size: int = 50,
     initial_concurrency: int = 20,
@@ -927,11 +936,12 @@ def query_llm_fast(
     save_incremental: bool = True,
     incremental_interval: int = 1,
     start_batch_number: int = 1,
-    initial_incremental_counter: int = 0
+    initial_incremental_counter: int = 0,
+    subdir: str = ""
 ) -> Dict[str, Dict[str, Dict[str, str]]]:
     """
     Fast robust synchronous query function with adaptive optimization and 100% success guarantee.
-    
+
     Args:
         nested_queries: Dictionary of {topic: {persona_id: prompt}}
         list_of_models: List of model specifications
@@ -945,7 +955,8 @@ def query_llm_fast(
         ensure_100_percent_success: If True, retry failed queries until they succeed
         save_incremental: If True, save incremental results to logs/incremental folder
         incremental_interval: Save incremental results every N batches (1 = every batch)
-    
+        subdir: Subdirectory within logs (e.g., "main", "control")
+
     Returns:
         Dictionary of {model: {topic: {persona_id: response}}}
     """
@@ -961,7 +972,8 @@ def query_llm_fast(
         save_incremental=save_incremental,
         incremental_interval=incremental_interval,
         start_batch_number=start_batch_number,
-        initial_incremental_counter=initial_incremental_counter
+        initial_incremental_counter=initial_incremental_counter,
+        subdir=subdir
     )
     
     try:
@@ -974,16 +986,16 @@ def query_llm_fast(
             raise
 
 
-def save_results_log(results: Dict[str, Dict[str, Dict[str, str]]], tag: Optional[str] = None) -> str:
+def save_results_log(results: Dict[str, Dict[str, Dict[str, str]]], tag: Optional[str] = None, subdir: str = "") -> str:
     """Persist model results to logs as JSON and return the saved file path."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     tag_part = f"_{tag}" if tag else ""
     filename = f"results_fast_{timestamp}{tag_part}.json"
-    path = Path(_logs_dir()) / filename
-    
+    path = Path(_logs_dir(subdir)) / filename
+
     with open(path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
-    
+
     print(f"💾 Results saved to: {path}")
     return str(path)
 
@@ -995,18 +1007,21 @@ def load_incremental_results(file_path: str) -> Dict:
     return data
 
 
-def load_latest_fast_results() -> Optional[Dict[str, Dict[str, Dict[str, str]]]]:
+def load_latest_fast_results(subdir: str = "") -> Optional[Dict[str, Dict[str, Dict[str, str]]]]:
     """
     Load the most recent query results from any available source.
     Checks (in order):
     1. Standard results_*.json files in logs/
     2. Final incremental files (*_final_*.json) in logs/incremental/
     3. Any incremental files in logs/incremental/
-    
+
+    Args:
+        subdir: Subdirectory within logs (e.g., "main", "control")
+
     Returns:
         Dictionary of {model: {topic: {persona_id: response}}} or None if no results found
     """
-    logs_path = Path(_logs_dir())
+    logs_path = Path(_logs_dir(subdir))
     
     # First try standard results files
     std_files = sorted(logs_path.glob("results_*.json"), 
@@ -1088,11 +1103,12 @@ def query_llm_fast_resume(
     retry_delay: float = 2.0,
     ensure_100_percent_success: bool = True,
     save_incremental: bool = True,
-    incremental_interval: int = 1
+    incremental_interval: int = 1,
+    subdir: str = ""
 ) -> Dict[str, Dict[str, Dict[str, str]]]:
     """
     Resume query processing from an incremental results file.
-    
+
     Args:
         incremental_file_path: Path to the incremental results file to resume from
         original_queries: The original queries dictionary used in the initial run
@@ -1107,6 +1123,7 @@ def query_llm_fast_resume(
         ensure_100_percent_success: If True, retry failed queries until they succeed
         save_incremental: If True, save incremental results to logs/incremental folder
         incremental_interval: Save incremental results every N batches (1 = every batch)
+        subdir: Subdirectory within logs (e.g., "main", "control")
     
     Returns:
         Dictionary of {model: {topic: {persona_id: response}}}
@@ -1174,7 +1191,8 @@ def query_llm_fast_resume(
         save_incremental=save_incremental,
         incremental_interval=incremental_interval,
         start_batch_number=start_batch_number,
-        initial_incremental_counter=last_incremental_counter
+        initial_incremental_counter=last_incremental_counter,
+        subdir=subdir
     )
     
     # Merge results - preserve ALL existing results and add new ones

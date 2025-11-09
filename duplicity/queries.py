@@ -16,28 +16,35 @@ from .llm_tool import (
 )
 
 
-def _logs_dir() -> str:
-    """Return absolute path to the project's logs directory."""
+def _logs_dir(subdir: str = "") -> str:
+    """Return absolute path to the project's logs directory.
+
+    Args:
+        subdir: Subdirectory within logs (e.g., "main", "control")
+    """
     project_root = Path(__file__).resolve().parent.parent
-    logs_path = project_root / "logs"
+    if subdir:
+        logs_path = project_root / "logs" / subdir
+    else:
+        logs_path = project_root / "logs"
     logs_path.mkdir(parents=True, exist_ok=True)
     return str(logs_path)
 
 
-def save_results_log(results: Dict[str, Dict[str, Dict[str, str]]], tag: Optional[str] = None) -> str:
+def save_results_log(results: Dict[str, Dict[str, Dict[str, str]]], tag: Optional[str] = None, subdir: str = "") -> str:
     """Persist model results to logs as JSON and return the saved file path."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     tag_part = f"_{tag}" if tag else ""
     filename = f"results_{timestamp}{tag_part}.json"
-    path = os.path.join(_logs_dir(), filename)
+    path = os.path.join(_logs_dir(subdir), filename)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
     return path
 
 
-def list_cached_results() -> List[str]:
+def list_cached_results(subdir: str = "") -> List[str]:
     """List cached results JSON files (sorted newest first)."""
-    logs_path = Path(_logs_dir())
+    logs_path = Path(_logs_dir(subdir))
     files = sorted(logs_path.glob("results_*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
     return [str(p) for p in files]
 
@@ -48,9 +55,9 @@ def load_results_from_log(filepath: str) -> Dict[str, Dict[str, Dict[str, str]]]
         return json.load(f)
 
 
-def load_latest_results() -> Optional[Dict[str, Dict[str, Dict[str, str]]]]:
+def load_latest_results(subdir: str = "") -> Optional[Dict[str, Dict[str, Dict[str, str]]]]:
     """Load the most recent cached results if present; otherwise return None."""
-    files = list_cached_results()
+    files = list_cached_results(subdir)
     if not files:
         return None
     return load_results_from_log(files[0])
