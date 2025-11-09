@@ -109,26 +109,45 @@ def generate_queries_for_personas(personas_dict: Dict, topics_list: List[str]) -
     personas = personas_dict.get("rows", [])
 
     query_template = (
-        "Here's a bit about me.\n\n{persona_details}\n\n"
-        "I'm interested in learning about the following topic: {topic}. For this topic, could you do the following:\n\n"
-        "Could you give me five facts about this topic, as well as the source you got them from? The sources shouldn't be links, just org name and article title. Present them as:\n"
-        "Section: TOPIC NAME\nSection: Facts\n"
-        "Fact 1\nFact 2\nFact 3\nFact 4\nFact 5\n\n"
-        "Section: Sources\n"
-        "Source 1 for Fact 1\nSource 2 for Fact 2\nSource 3 for Fact 3\nSource 4 for Fact 4\nSource 5 for Fact 5\n\n"
-        "Even if there's duplicates, just write out all the sources.\n\n"
-        "Then, at the end, make a final section summarizing the current situation.\nSection: Final Verdict\n\n"
-        "Don't include any introduction or conclusion - all I want is the facts, sources, and final verdict exactly as mentioned above.\n"
+        "Here's a bit about me.\n"
+        "{persona_details}\n\n"
+        "I'm interested in learning about the following topic:\n"
+        "{topic}.\n\n"
+        "Could you give me five facts about this topic?\n\n"
+        "Present your response in this format:\n"
+        "Fact 1\n"
+        "Fact 2\n"
+        "Fact 3\n"
+        "Fact 4\n"
+        "Fact 5\n\n"
+        "Don't include any introduction or conclusion - all I want is the facts."
     )
 
     for entry in personas:
         if "row" in entry and "persona" in entry["row"] and "professional_persona" in entry["row"]:
             row_data = entry["row"]
+
+            # Extract all required fields with defaults
+            age = row_data.get("age", "unknown")
             sex = row_data.get("sex", "person")
+            city = row_data.get("city", "an undisclosed city")
+            state = row_data.get("state", "an undisclosed state")
+            occupation = row_data.get("occupation", "an undisclosed occupation")
+            education_level = row_data.get("education_level", "an undisclosed education level")
+            persona = row_data.get("persona", "")
+            cultural_background = row_data.get("cultural_background", "")
+            professional_persona = row_data.get("professional_persona", "")
+
+            # Build persona details in the new format
             persona_details = (
-                f"I am a {row_data['age']}-year-old {sex}. "
-                f"{row_data['persona']} {row_data['professional_persona']}"
+                f"I am a {age}-year-old {sex} living in {city}, {state}.\n"
+                f"My occupation is {occupation}.\n"
+                f"My education level is {education_level}.\n"
+                f"{persona}\n"
+                f"{cultural_background}\n"
+                f"{professional_persona}"
             )
+
             persona_uuid = row_data["uuid"]
 
             for topic in topics_list:

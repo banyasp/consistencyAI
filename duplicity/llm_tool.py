@@ -179,8 +179,7 @@ class LLMComparisonTool:
             data = {
                 "model": model_spec,
                 "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 1000,
-                "temperature": 0.7
+                "max_tokens": 1000
             }
             
             async with self.session.post(
@@ -235,8 +234,7 @@ class LLMComparisonTool:
             data = {
                 "model": get_model_name_from_spec(model_spec),
                 "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 1000,
-                "temperature": 0.7
+                "max_tokens": 1000
             }
             
             async with self.session.post(
@@ -346,15 +344,18 @@ class LLMComparisonTool:
         # So we don't need the old sequential processing logic
         model_spec = models[0]  # Take the first (and only) model
         
-        # Route models based on all_open_router flag
-        if all_open_router:
+        # Route models based on provider
+        # ALWAYS use direct OpenAI API for OpenAI models (never through OpenRouter)
+        # This is because OpenRouter fails for ChatGPT-5 and other OpenAI models
+        if "openai" in model_spec.lower():
+            response = await self._make_request_with_retry(self.query_openai, prompt, model_spec)
+        # For all other models, respect the all_open_router flag
+        elif all_open_router:
             response = await self._make_request_with_retry(self.query_via_openrouter, prompt, model_spec)
         else:
-            # Route specific models directly to their APIs
+            # Route specific models directly to their APIs when all_open_router is False
             if "gemini" in model_spec.lower():
                 response = await self._make_request_with_retry(self.query_google, prompt, model_spec)
-            elif "openai" in model_spec.lower():
-                response = await self._make_request_with_retry(self.query_openai, prompt, model_spec)
             else:
                 response = await self._make_request_with_retry(self.query_via_openrouter, prompt, model_spec)
         
