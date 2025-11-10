@@ -1022,32 +1022,36 @@ def load_latest_fast_results(subdir: str = "") -> Optional[Dict[str, Dict[str, D
         Dictionary of {model: {topic: {persona_id: response}}} or None if no results found
     """
     logs_path = Path(_logs_dir(subdir))
-    
+
     # First try standard results files
-    std_files = sorted(logs_path.glob("results_*.json"), 
+    std_files = sorted(logs_path.glob("results_*.json"),
                        key=lambda p: p.stat().st_mtime, reverse=True)
     if std_files:
+        print(f"📂 Loading results from: {std_files[0]}")
         with open(std_files[0], 'r', encoding='utf-8') as f:
             return json.load(f)
-    
+
     # Then try incremental files (look for 'final' first)
     inc_path = logs_path / "incremental"
     if inc_path.exists():
         final_files = sorted(inc_path.glob("*_final_*.json"),
                             key=lambda p: p.stat().st_mtime, reverse=True)
         if final_files:
+            print(f"📂 Loading results from: {final_files[0]}")
             with open(final_files[0], 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 return data.get('results', {})  # Extract just the results section
-        
+
         # If no final, try any incremental file
         inc_files = sorted(inc_path.glob("incremental_results_*.json"),
                           key=lambda p: p.stat().st_mtime, reverse=True)
         if inc_files:
+            print(f"📂 Loading results from: {inc_files[0]}")
             with open(inc_files[0], 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 return data.get('results', {})
-    
+
+    print("⚠️  No results files found")
     return None
 
 
