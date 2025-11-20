@@ -11,7 +11,7 @@ long_description = (this_directory / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="consistencyAI",
-    version="1.0.0",
+    version="2.0.0",
     author="Peter Banyas, Shristi Sharma, Alistair Simmons, Atharva Vispute",
     description="A benchmark for evaluating LLM consistency across demographics",
     long_description=long_description,

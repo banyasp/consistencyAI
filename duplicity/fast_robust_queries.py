@@ -171,7 +171,7 @@ class FastRobustQueryProcessor:
             with open(filepath, 'w', encoding='utf-8') as f:
                 json.dump(incremental_data, f, indent=2, ensure_ascii=False)
             
-            print(f"📁 Incremental results saved: {filename}")
+            print(f" Incremental results saved: {filename}")
             print(f"   Progress: {batch_num + 1}/{total_batches} ({((batch_num + 1) / total_batches) * 100:.1f}%)")
             print(f"   File: {filepath}")
         
@@ -215,9 +215,9 @@ class FastRobustQueryProcessor:
         with open(self.progress_file, 'w') as f:
             json.dump(progress_data, f, indent=2)
         
-        print(f"📝 Progress saved: {completed_batches}/{total_batches} batches complete (ETA: {eta})")
+        print(f" Progress saved: {completed_batches}/{total_batches} batches complete (ETA: {eta})")
         if self.retry_queue:
-            print(f"🔄 Retry queue: {len(self.retry_queue)} items pending")
+            print(f" Retry queue: {len(self.retry_queue)} items pending")
     
     def _create_batches(self, queries: Dict[str, Dict[str, str]], models: List[str]) -> List[Dict]:
         """Create optimized batches with INTERLEAVED model distribution for faster completion."""
@@ -242,7 +242,7 @@ class FastRobustQueryProcessor:
         self.total_tasks = len(all_tasks)
         self.next_task_idx = 0  # Track the next task to process (CRITICAL FIX)
         
-        print(f"📋 Created {len(self.expected_tasks)} expected task combinations (model×topic×persona)")
+        print(f" Created {len(self.expected_tasks)} expected task combinations (model×topic×persona)")
         
         # Calculate estimated total batches (may change with adaptive sizing)
         total_batches = (self.total_tasks + self.current_batch_size - 1) // self.current_batch_size
@@ -273,7 +273,7 @@ class FastRobustQueryProcessor:
         missing = self.expected_tasks - completed
         
         if missing:
-            print(f"⚠️  Found {len(missing)} missing task combinations:")
+            print(f"  Found {len(missing)} missing task combinations:")
             # Group by model and topic for clearer reporting
             missing_by_model_topic = {}
             for model, topic, persona_id in missing:
@@ -334,10 +334,10 @@ class FastRobustQueryProcessor:
                 "retry_attempt": self.retry_attempts[task_key],
                 "failure_reason": reason
             })
-            print(f"🔄 Added to retry queue: {task_key} (attempt {self.retry_attempts[task_key]}/{self.max_retries})")
+            print(f" Added to retry queue: {task_key} (attempt {self.retry_attempts[task_key]}/{self.max_retries})")
         else:
             self.metrics.max_retries_reached += 1
-            print(f"❌ Max retries reached for: {task_key} - marking as permanently failed")
+            print(f" Max retries reached for: {task_key} - marking as permanently failed")
     
     def _update_performance_metrics(self, batch_results: List[Dict], batch_time: float):
         """Update performance metrics and adjust strategy."""
@@ -371,12 +371,12 @@ class FastRobustQueryProcessor:
         if success_rate >= 0.95 and self.current_batch_size < 100:  # Safe upper limit
             new_batch_size = min(self.current_batch_size + 10, 100)
             if new_batch_size != self.current_batch_size:
-                print(f"📈 Increasing batch size from {self.current_batch_size} to {new_batch_size} (success rate: {success_rate:.1%})")
+                print(f" Increasing batch size from {self.current_batch_size} to {new_batch_size} (success rate: {success_rate:.1%})")
                 self.current_batch_size = new_batch_size
         elif success_rate < 0.90 and self.current_batch_size > 20:  # Decrease if struggling
             new_batch_size = max(self.current_batch_size - 10, 20)
             if new_batch_size != self.current_batch_size:
-                print(f"📉 Decreasing batch size from {self.current_batch_size} to {new_batch_size} (success rate: {success_rate:.1%})")
+                print(f" Decreasing batch size from {self.current_batch_size} to {new_batch_size} (success rate: {success_rate:.1%})")
                 self.current_batch_size = new_batch_size
         
         if hit_rate_limit:
@@ -384,20 +384,20 @@ class FastRobustQueryProcessor:
             self.current_concurrency = max(self.min_concurrency, self.current_concurrency // 2)
             self.consecutive_failures += 1
             self.consecutive_successes = 0
-            print(f"⚠️  Rate limited - reducing concurrency to {self.current_concurrency}")
+            print(f"  Rate limited - reducing concurrency to {self.current_concurrency}")
             
         elif success_rate < 0.8:
             # Low success rate - reduce concurrency
             self.current_concurrency = max(self.min_concurrency, int(self.current_concurrency * 0.8))
             self.consecutive_failures += 1
             self.consecutive_successes = 0
-            print(f"⚠️  Low success rate ({success_rate:.1%}) - reducing concurrency to {self.current_concurrency}")
+            print(f"  Low success rate ({success_rate:.1%}) - reducing concurrency to {self.current_concurrency}")
             
         elif success_rate > 0.95 and self.consecutive_successes >= 3:
             # High success rate - increase concurrency
             if self.consecutive_successes >= 3:
                 self.current_concurrency = min(self.max_concurrency, int(self.current_concurrency * 1.2))
-                print(f"🚀 High success rate ({success_rate:.1%}) - increasing concurrency to {self.current_concurrency}")
+                print(f" High success rate ({success_rate:.1%}) - increasing concurrency to {self.current_concurrency}")
                 self.consecutive_successes = 0
             else:
                 self.consecutive_successes += 1
@@ -469,7 +469,7 @@ class FastRobustQueryProcessor:
         """Process a batch with high concurrency and minimal delays."""
         start_time = time.time()
         
-        print(f"🚀 Processing batch {batch_num + 1}/{total_batches} ({len(batch)} queries, concurrency: {self.current_concurrency}, current batch size: {self.current_batch_size})")
+        print(f" Processing batch {batch_num + 1}/{total_batches} ({len(batch)} queries, concurrency: {self.current_concurrency}, current batch size: {self.current_batch_size})")
         
         # Process batch with current concurrency
         semaphore = asyncio.Semaphore(self.current_concurrency)
@@ -512,7 +512,7 @@ class FastRobustQueryProcessor:
         failed = len(processed_results) - successful
         total_tokens = sum(r.get("tokens", 0) for r in processed_results)
         
-        print(f"✅ Batch {batch_num + 1} complete: {successful} success, {failed} failed, {total_tokens} tokens, {batch_time:.1f}s")
+        print(f" Batch {batch_num + 1} complete: {successful} success, {failed} failed, {total_tokens} tokens, {batch_time:.1f}s")
         
         # Update performance metrics
         self._update_performance_metrics(processed_results, batch_time)
@@ -524,7 +524,7 @@ class FastRobustQueryProcessor:
         if not self.retry_queue:
             return []
         
-        print(f"🔄 Processing {len(self.retry_queue)} failed items with SMART retry logic...")
+        print(f" Processing {len(self.retry_queue)} failed items with SMART retry logic...")
         
         # SMART RETRY STRATEGY: Prioritize items by failure reason and attempt count
         def retry_priority(task):
@@ -582,16 +582,16 @@ class FastRobustQueryProcessor:
         # SMART RETRY ANALYSIS
         if successful_retries:
             success_rate = len(successful_retries) / (len(successful_retries) + len(still_failed))
-            print(f"✅ Retry round complete: {len(successful_retries)} successful, {len(still_failed)} still failed")
+            print(f" Retry round complete: {len(successful_retries)} successful, {len(still_failed)} still failed")
             print(f"   Retry success rate: {success_rate:.1%}")
             
             # If retry success rate is high, we can be more aggressive next time
             if success_rate > 0.8:
-                print(f"🚀 High retry success rate - can be more aggressive in future")
+                print(f" High retry success rate - can be more aggressive in future")
             elif success_rate < 0.5:
-                print(f"⚠️  Low retry success rate - may need to investigate root causes")
+                print(f"  Low retry success rate - may need to investigate root causes")
         else:
-            print(f"❌ No successful retries in this round")
+            print(f" No successful retries in this round")
         
         return successful_retries
     
@@ -624,7 +624,7 @@ class FastRobustQueryProcessor:
         
         self.start_time = time.time()
         
-        print(f"🎯 Starting FAST robust query processing (100% success mode):")
+        print(f" Starting FAST robust query processing (100% success mode):")
         print(f"   Models: {len(models)}")
         print(f"   Topics: {len(queries)}")
         total_personas = sum(len(personas) for personas in queries.values())
@@ -656,7 +656,7 @@ class FastRobustQueryProcessor:
             batch = self._get_next_batch(batch_num)
             
             if not batch:
-                print("⚠️  No more tasks to process")
+                print("  No more tasks to process")
                 break
             
             try:
@@ -714,26 +714,26 @@ class FastRobustQueryProcessor:
                         else:
                             eta_str = f"{eta_minutes:.0f}m"
                         
-                        print(f"📊 Progress: {len(all_results)}/{total_queries} ({len(all_results)/total_queries*100:.1f}%)")
+                        print(f" Progress: {len(all_results)}/{total_queries} ({len(all_results)/total_queries*100:.1f}%)")
                         print(f"   Speed: {queries_per_second:.1f} queries/sec | Success: {self.metrics.success_rate:.1%}")
                         print(f"   ETA: {eta_str} | Concurrency: {self.current_concurrency} | Batch size: {self.current_batch_size}")
                     else:
-                        print(f"📊 Progress: {len(all_results)}/{total_queries} ({len(all_results)/total_queries*100:.1f}%)")
+                        print(f" Progress: {len(all_results)}/{total_queries} ({len(all_results)/total_queries*100:.1f}%)")
                         print(f"   Success rate: {self.metrics.success_rate:.1%} | Concurrency: {self.current_concurrency}")
                 
             except Exception as e:
-                print(f"❌ Error processing batch {batch_num + 1}: {str(e)}")
+                print(f" Error processing batch {batch_num + 1}: {str(e)}")
                 # Continue with next batch
             
             batch_num += 1
         
         # Process retry queue until all succeed or max retries reached
         if self.ensure_100_percent_success and self.retry_queue:
-            print(f"\n🔄 Processing retry queue to achieve 100% success...")
+            print(f"\n Processing retry queue to achieve 100% success...")
             
             retry_round = 1
             while self.retry_queue and retry_round <= self.max_retries:
-                print(f"\n🔄 Retry round {retry_round}/{self.max_retries}")
+                print(f"\n Retry round {retry_round}/{self.max_retries}")
                 retry_results = await self._process_retry_queue(all_open_router)
                 all_results.extend(retry_results)
                 
@@ -742,7 +742,7 @@ class FastRobustQueryProcessor:
                 self._save_incremental_results(partial_organized, total_batches - 1, total_batches, f"retry_round_{retry_round}")
                 
                 if not self.retry_queue:
-                    print("🎉 All retries successful! 100% success achieved!")
+                    print(" All retries successful! 100% success achieved!")
                     break
                 
                 retry_round += 1
@@ -752,16 +752,16 @@ class FastRobustQueryProcessor:
                     self.retry_delay *= 1.5  # Exponential backoff
             
             if self.retry_queue:
-                print(f"⚠️  {len(self.retry_queue)} items still failed after {self.max_retries} retry rounds")
+                print(f"  {len(self.retry_queue)} items still failed after {self.max_retries} retry rounds")
                 print("   These will be marked as permanently failed")
         
         # NEW: Check for missing tasks and attempt targeted recovery
-        print(f"\n🔍 Checking for missing task combinations...")
+        print(f"\n Checking for missing task combinations...")
         partial_organized = self._organize_results(all_results)
         missing_tasks = self._identify_missing_tasks(partial_organized)
         
         if missing_tasks:
-            print(f"\n🎯 Attempting targeted recovery for {len(missing_tasks)} missing tasks...")
+            print(f"\n Attempting targeted recovery for {len(missing_tasks)} missing tasks...")
             
             # Process missing tasks with very conservative settings
             recovery_concurrency = max(3, self.min_concurrency // 2)
@@ -798,9 +798,9 @@ class FastRobustQueryProcessor:
             # Check again
             remaining_missing = self._identify_missing_tasks(partial_organized)
             if not remaining_missing:
-                print("✅ Recovery successful! All tasks now complete!")
+                print(" Recovery successful! All tasks now complete!")
             else:
-                print(f"⚠️  {len(remaining_missing)} tasks still missing after recovery")
+                print(f"  {len(remaining_missing)} tasks still missing after recovery")
                 print("   Adding placeholder results for incomplete tasks...")
                 
                 # Add placeholder results for truly failed tasks
@@ -812,7 +812,7 @@ class FastRobustQueryProcessor:
                         "tokens": 0
                     })
         else:
-            print("✅ All expected task combinations are present!")
+            print(" All expected task combinations are present!")
         
         # Organize final results
         final_results = self._organize_results(all_results)
@@ -832,12 +832,12 @@ class FastRobustQueryProcessor:
         expected_count = len(self.expected_tasks)
         coverage_pct = (completed_count / expected_count * 100) if expected_count > 0 else 0
         
-        print(f"\n📊 Final Results:")
+        print(f"\n Final Results:")
         print(f"   Total queries processed: {total_queries}")
         print(f"   Successful: {successful_queries} ({successful_queries/total_queries*100:.1f}%)")
         print(f"   Failed: {failed_queries} ({failed_queries/total_queries*100:.1f}%)")
         print(f"   ")
-        print(f"   📋 Coverage Report:")
+        print(f"    Coverage Report:")
         print(f"      Expected task combinations: {expected_count}")
         print(f"      Completed task combinations: {completed_count}")
         print(f"      Coverage: {coverage_pct:.1f}%")
@@ -855,15 +855,15 @@ class FastRobustQueryProcessor:
         if self.ensure_100_percent_success:
             success_rate = successful_queries / total_queries if total_queries > 0 else 0
             if coverage_pct >= 100.0 and success_rate >= 0.99:
-                print("🎉 PERFECT: 100% coverage with 99%+ success rate!")
+                print(" PERFECT: 100% coverage with 99%+ success rate!")
             elif coverage_pct >= 100.0 and success_rate >= 0.95:
-                print("✅ EXCELLENT: 100% coverage with 95%+ success rate")
+                print(" EXCELLENT: 100% coverage with 95%+ success rate")
             elif coverage_pct >= 100.0:
-                print("✅ COMPLETE: 100% coverage achieved (some failures)")
+                print(" COMPLETE: 100% coverage achieved (some failures)")
             elif coverage_pct >= 95.0:
-                print("⚠️  GOOD: 95%+ coverage but some tasks missing")
+                print("  GOOD: 95%+ coverage but some tasks missing")
             else:
-                print(f"⚠️  WARNING: Only {coverage_pct:.1f}% coverage - significant data gaps!")
+                print(f"  WARNING: Only {coverage_pct:.1f}% coverage - significant data gaps!")
         
         return final_results
 
@@ -900,7 +900,7 @@ class FastRobustQueryProcessor:
         # Check if we're approaching rate limit
         current_count = self.model_request_windows[model]["request_count"]
         if current_count >= self.max_requests_per_minute:
-            print(f"🚨 Rate limit approaching for {model}: {current_count}/{self.max_requests_per_minute} requests in current window")
+            print(f" Rate limit approaching for {model}: {current_count}/{self.max_requests_per_minute} requests in current window")
             return False
         
         # Update request count
@@ -913,13 +913,13 @@ class FastRobustQueryProcessor:
         """Handle rate limiting for a specific model by implementing backoff."""
         current_time = time.time()
         self.model_rate_limits[model]["backoff_until"] = current_time + backoff_duration
-        print(f"🚨 Rate limit hit for {model}, backing off for {backoff_duration}s")
+        print(f" Rate limit hit for {model}, backing off for {backoff_duration}s")
         
         # Reduce concurrency for this model temporarily
         if self.current_concurrency > self.min_concurrency:
             reduction = max(5, self.current_concurrency // 4)
             self.current_concurrency = max(self.min_concurrency, self.current_concurrency - reduction)
-            print(f"📉 Reduced concurrency to {self.current_concurrency} due to rate limiting")
+            print(f" Reduced concurrency to {self.current_concurrency} due to rate limiting")
 
 
 def query_llm_fast(
@@ -996,7 +996,7 @@ def save_results_log(results: Dict[str, Dict[str, Dict[str, str]]], tag: Optiona
     with open(path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
 
-    print(f"💾 Results saved to: {path}")
+    print(f" Results saved to: {path}")
     return str(path)
 
 
@@ -1027,7 +1027,7 @@ def load_latest_fast_results(subdir: str = "") -> Optional[Dict[str, Dict[str, D
     std_files = sorted(logs_path.glob("results_*.json"),
                        key=lambda p: p.stat().st_mtime, reverse=True)
     if std_files:
-        print(f"📂 Loading results from: {std_files[0]}")
+        print(f" Loading results from: {std_files[0]}")
         with open(std_files[0], 'r', encoding='utf-8') as f:
             return json.load(f)
 
@@ -1037,7 +1037,7 @@ def load_latest_fast_results(subdir: str = "") -> Optional[Dict[str, Dict[str, D
         final_files = sorted(inc_path.glob("*_final_*.json"),
                             key=lambda p: p.stat().st_mtime, reverse=True)
         if final_files:
-            print(f"📂 Loading results from: {final_files[0]}")
+            print(f" Loading results from: {final_files[0]}")
             with open(final_files[0], 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 return data.get('results', {})  # Extract just the results section
@@ -1046,12 +1046,12 @@ def load_latest_fast_results(subdir: str = "") -> Optional[Dict[str, Dict[str, D
         inc_files = sorted(inc_path.glob("incremental_results_*.json"),
                           key=lambda p: p.stat().st_mtime, reverse=True)
         if inc_files:
-            print(f"📂 Loading results from: {inc_files[0]}")
+            print(f" Loading results from: {inc_files[0]}")
             with open(inc_files[0], 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 return data.get('results', {})
 
-    print("⚠️  No results files found")
+    print("  No results files found")
     return None
 
 
@@ -1132,7 +1132,7 @@ def query_llm_fast_resume(
     Returns:
         Dictionary of {model: {topic: {persona_id: response}}}
     """
-    print(f"🔄 Resuming from incremental file: {incremental_file_path}")
+    print(f" Resuming from incremental file: {incremental_file_path}")
     
     # Load existing results
     existing_data = load_incremental_results(incremental_file_path)
@@ -1157,7 +1157,7 @@ def query_llm_fast_resume(
                     persona_id in existing_results[model][topic]):
                     completed_combinations += 1
     
-    print(f"📊 Resume Status:")
+    print(f" Resume Status:")
     print(f"   Total model-persona combinations: {total_combinations}")
     print(f"   Completed combinations: {completed_combinations}")
     print(f"   Missing combinations: {total_combinations - completed_combinations}")
@@ -1165,10 +1165,10 @@ def query_llm_fast_resume(
     print(f"   Missing personas to retry: {total_missing}")
     
     if total_missing == 0:
-        print("✅ All queries already completed!")
+        print(" All queries already completed!")
         return existing_results
     
-    print(f"🚀 Processing {total_missing} missing queries...")
+    print(f" Processing {total_missing} missing queries...")
     
     # Get the last batch number and incremental counter from the existing results
     metadata = existing_results.get("metadata", {})
@@ -1177,8 +1177,8 @@ def query_llm_fast_resume(
     
     start_batch_number = last_batch_number + 1
     
-    print(f"📊 Continuing from batch {start_batch_number}")
-    print(f"📊 Continuing incremental counter from {last_incremental_counter}")
+    print(f" Continuing from batch {start_batch_number}")
+    print(f" Continuing incremental counter from {last_incremental_counter}")
     
     # Process missing queries
     missing_results = query_llm_fast(
@@ -1200,7 +1200,7 @@ def query_llm_fast_resume(
     )
     
     # Merge results - preserve ALL existing results and add new ones
-    print("🔗 Merging results...")
+    print(" Merging results...")
     merged_results = existing_results.copy()
     
     for model, model_results in missing_results.items():
@@ -1216,8 +1216,8 @@ def query_llm_fast_resume(
                 if persona_id not in merged_results[model][topic]:
                     merged_results[model][topic][persona_id] = response
     
-    print("✅ Resume completed successfully!")
-    print(f"📊 Final results contain {len(merged_results)} models")
+    print(" Resume completed successfully!")
+    print(f" Final results contain {len(merged_results)} models")
     
     # Count final combinations
     final_combinations = 0
@@ -1226,6 +1226,6 @@ def query_llm_fast_resume(
             for topic in merged_results[model]:
                 final_combinations += len(merged_results[model][topic])
     
-    print(f"📊 Final model-persona combinations: {final_combinations}")
+    print(f" Final model-persona combinations: {final_combinations}")
     return merged_results
 

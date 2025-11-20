@@ -272,7 +272,7 @@ def create_variance_comparison_visualizations(
     plt.savefig(f"{output_dir}/variance_distributions.png", dpi=300, bbox_inches="tight")
     plt.close()
 
-    print(f"✅ Visualizations saved to: {output_dir}/")
+    print(f" Visualizations saved to: {output_dir}/")
 
 
 def generate_variance_report(
@@ -378,5 +378,5 @@ def generate_variance_report(
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(report_text)
 
-    print(f"✅ Report saved to: {output_path}")
+    print(f" Report saved to: {output_path}")
     return report_text

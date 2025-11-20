@@ -109,7 +109,7 @@ class LLMComparisonTool:
         
         # Restart session if it's been running too long
         if current_time - self.session_start_time > self.session_timeout:
-            print(f"⚠️  Session timeout reached ({self.session_timeout}s), restarting...")
+            print(f"  Session timeout reached ({self.session_timeout}s), restarting...")
             if self.session:
                 await self.session.close()
             
@@ -141,21 +141,21 @@ class LLMComparisonTool:
                 if hasattr(response, 'is_empty_or_invalid') and response.is_empty_or_invalid():
                     if attempt < max_retries - 1:
                         delay = base_delay * (2 ** attempt)  # Exponential backoff
-                        print(f"⚠️  Empty/invalid response, retrying in {delay}s... (attempt {attempt + 1}/{max_retries})")
+                        print(f"  Empty/invalid response, retrying in {delay}s... (attempt {attempt + 1}/{max_retries})")
                         await asyncio.sleep(delay)
                         continue
                     else:
-                        print(f"❌ Max retries reached, returning invalid response")
+                        print(f" Max retries reached, returning invalid response")
                 
                 return response
                 
             except Exception as e:
                 if attempt < max_retries - 1:
                     delay = base_delay * (2 ** attempt)
-                    print(f"⚠️  Request failed: {str(e)}, retrying in {delay}s... (attempt {attempt + 1}/{max_retries})")
+                    print(f"  Request failed: {str(e)}, retrying in {delay}s... (attempt {attempt + 1}/{max_retries})")
                     await asyncio.sleep(delay)
                 else:
-                    print(f"❌ Max retries reached, returning error response")
+                    print(f" Max retries reached, returning error response")
                     # Return an error response
                     return LLMResponse(
                         model_name=kwargs.get('model_spec', 'unknown'),
@@ -324,62 +324,6 @@ class LLMComparisonTool:
                 timestamp=datetime.now().isoformat()
             )
 
-    async def query_google(self, prompt: str, model_spec: str) -> LLMResponse:
-        """Query Google Gemini directly."""
-        start_time = time.time()
-        
-        try:
-            headers = {
-                "Content-Type": "application/json"
-            }
-            
-            data = {
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {
-                    "maxOutputTokens": config.GEMINI_MAX_OUTPUT_TOKENS,
-                    "temperature": config.GEMINI_TEMPERATURE
-                }
-            }
-            
-            async with self.session.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{get_model_name_from_spec(model_spec)}:generateContent?key={config.GOOGLE_API_KEY}",
-                headers=headers,
-                json=data
-            ) as response:
-                if response.status == 200:
-                    result = await response.json()
-                    response_text = result["candidates"][0]["content"]["parts"][0]["text"]
-                    tokens_used = result.get("usageMetadata", {}).get("totalTokenCount", 0)
-                    
-                    return LLMResponse(
-                        model_name=model_spec,
-                        provider="google",
-                        response_text=response_text,
-                        tokens_used=tokens_used,
-                        response_time=time.time() - start_time,
-                        timestamp=datetime.now().isoformat()
-                    )
-                else:
-                    error_text = await response.text()
-                    return LLMResponse(
-                        model_name=model_spec,
-                        provider="google",
-                        response_text="",
-                        error=f"HTTP {response.status}: {error_text}",
-                        response_time=time.time() - start_time,
-                        timestamp=datetime.now().isoformat()
-                    )
-                    
-        except Exception as e:
-            return LLMResponse(
-                model_name=model_spec,
-                provider="google",
-                response_text="",
-                error=str(e),
-                response_time=time.time() - start_time,
-                timestamp=datetime.now().isoformat()
-            )
-
     async def run_comparison(self, prompt: str, models: Optional[List[str]] = None, all_open_router: bool = False) -> List[LLMResponse]:
         """
         FIXED VERSION: Process a single prompt for a single model.
@@ -397,14 +341,8 @@ class LLMComparisonTool:
         # This is because OpenRouter fails for ChatGPT-5 and other OpenAI models
         if "openai" in model_spec.lower():
             response = await self._make_request_with_retry(self.query_openai, prompt, model_spec)
-        # For all other models, respect the all_open_router flag
-        elif all_open_router:
-            response = await self._make_request_with_retry(self.query_via_openrouter, prompt, model_spec)
+        # For all other models (including Gemini), use OpenRouter
         else:
-            # Route specific models directly to their APIs when all_open_router is False
-            if "gemini" in model_spec.lower():
-                response = await self._make_request_with_retry(self.query_google, prompt, model_spec)
-            else:
-                response = await self._make_request_with_retry(self.query_via_openrouter, prompt, model_spec)
+            response = await self._make_request_with_retry(self.query_via_openrouter, prompt, model_spec)
         
         return [response]

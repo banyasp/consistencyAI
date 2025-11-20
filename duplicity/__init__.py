@@ -18,7 +18,7 @@ Core modules:
 - embedding_analysis: Statistical analysis and clustering of embeddings
 """
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 __author__ = "Peter Banyas, Shristi Sharma, Alistair Simmons, Atharva Vispute"
 
 # Import config module for API key management

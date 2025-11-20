@@ -123,11 +123,11 @@ def run_control_experiment(
     print()
 
     # Load Mary Alberti persona
-    print("📋 Loading Mary Alberti persona...")
+    print(" Loading Mary Alberti persona...")
     persona = load_mary_alberti_persona()
 
     # Generate control queries
-    print(f"🔄 Generating {repetitions} repetitions...")
+    print(f" Generating {repetitions} repetitions...")
     control_queries = generate_control_queries(
         persona,
         topic="What are the health impacts of genetically modified food?",
@@ -135,7 +135,7 @@ def run_control_experiment(
     )
 
     # Run queries
-    print("🚀 Querying models...")
+    print(" Querying models...")
     results = query_llm_fast(
         nested_queries=control_queries,
         list_of_models=models,
@@ -151,7 +151,7 @@ def run_control_experiment(
     )
 
     print()
-    print("✅ Control experiment complete!")
+    print(" Control experiment complete!")
     print(f"   Results saved to: logs/control/")
     print()
 
