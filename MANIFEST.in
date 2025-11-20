@@ -1,12 +1,30 @@
+# Root files
 include README.md
-include QUICKSTART.md
-include API.md
-include INSTALL.md
 include LICENSE
 include requirements.txt
 include main.ipynb
+include CLEANUP_SUMMARY.md
+
+# Documentation
+recursive-include docs *.md
+
+# Example results (optional but nice for users)
+recursive-include results *.md
+recursive-include results *.pkl
+recursive-include results *.json
+recursive-include results *.png
+
+# v1 archive
+recursive-include v1 *.ipynb
+
+# Python package
 recursive-include duplicity *.py
+
+# Exclusions
 global-exclude __pycache__
 global-exclude *.py[co]
 global-exclude .DS_Store
+global-exclude .ipynb_checkpoints
+global-exclude .env
+global-exclude .env.local
 

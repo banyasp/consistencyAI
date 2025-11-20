@@ -190,8 +190,12 @@ def plot_overall_leaderboard(
     if not sorted_data:
         return
     sorted_models, sorted_scores = zip(*sorted_data)
-    fig = plt.figure(figsize=(8, 4))
-    plt.barh(sorted_models, sorted_scores, color="lightgreen")
+
+    # Calculate height based on number of models (0.8 inches per model, min 8 inches)
+    num_models = len(sorted_models)
+    height = max(8, num_models * 0.8)
+    fig = plt.figure(figsize=(10, height))
+    plt.barh(sorted_models, sorted_scores, color="black")
     plt.xlabel("Overall Average Semantic Similarity")
     plt.title("Overall Model Consistency Across All Topics")
     plt.gca().invert_yaxis()

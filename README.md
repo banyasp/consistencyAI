@@ -4,7 +4,17 @@ A novel benchmark for evaluating Large Language Models' tendency to provide inco
 
 By: Peter Banyas, Shristi Sharma, Alistair Simmons, Atharva Vispute *(the Duke Phishermen)*
 
-Get started fast with main.ipynb!
+Get started fast with [main.ipynb](main.ipynb)!
+
+##  Documentation
+
+- **[Quick Start Guide](docs/QUICKSTART.md)** - Get up and running in minutes
+- **[Installation Instructions](docs/INSTALL.md)** - Detailed setup guide
+- **[API Keys Setup](docs/API_KEYS_README.md)** - Configure your API access
+- **[API Reference](docs/API.md)** - Complete function documentation
+- **[Project Structure](docs/STRUCTURE.md)** - Codebase organization
+- **[Configuration Examples](docs/config.md)** - Sample configurations
+- **[Example Results](results/README.md)** - Whitehouse experiment findings
 
 ## Paper & App
 Check out our preprint here: https://arxiv.org/pdf/2510.13852
@@ -33,12 +43,14 @@ Perfect consistency would yield a similarity of 1.0, while completely opposing f
 ## Features
 
 - Async LLM querying with retry logic and rate limiting
-- Support for multiple LLM providers (OpenRouter, OpenAI, Google Gemini)
+- Support for multiple LLM providers via OpenRouter and direct OpenAI API
 - Fast robust query processor with 100% success guarantee
 - Incremental progress saving for long-running experiments
+- Control experiment methodology for baseline variance measurement
+- Variance analysis framework comparing persona-sensitivity vs self-consistency
 - Semantic similarity analysis using SentenceBERT
 - Advanced clustering and embedding analysis
-- Rich visualizations (heatmaps, 3D plots, leaderboards)
+- Rich visualizations (heatmaps, 3D plots, leaderboards, variance comparison plots)
 - Comprehensive caching and resumption capabilities
 
 ## Installation
@@ -70,8 +82,7 @@ Before using ConsistencyAI, you need to configure your API keys.
 
 ```bash
 export OPENROUTER_API_KEY="your-openrouter-key"
-export OPENAI_API_KEY="your-openai-key"  # Optional
-export GOOGLE_API_KEY="your-google-key"  # Optional
+export OPENAI_API_KEY="your-openai-key"  # Optional for direct OpenAI API
 ```
 
 ### Option 2: Configuration File
@@ -80,8 +91,7 @@ Edit `duplicity/config.py` and add your API keys:
 
 ```python
 OPENROUTER_API_KEY = "your-openrouter-key"
-OPENAI_API_KEY = "your-openai-key"  # Optional
-GOOGLE_API_KEY = "your-google-key"  # Optional
+OPENAI_API_KEY = "your-openai-key"  # Optional for direct OpenAI API
 ```
 
 ### Option 3: Programmatic Configuration
@@ -90,13 +100,20 @@ GOOGLE_API_KEY = "your-google-key"  # Optional
 from duplicity import config
 
 config.set_openrouter_key("your-openrouter-key")
-config.set_openai_key("your-openai-key")  # Optional
-config.set_google_key("your-google-key")  # Optional
+config.set_openai_key("your-openai-key")  # Optional for direct OpenAI API
 ```
+
+**Note**: OpenRouter provides access to models from Anthropic, Google, Meta, Mistral, and others. Direct OpenAI API is only needed for OpenAI models when not using OpenRouter.
 
 ## Quick Start
 
-Run main.ipynb !!
+The fastest way to get started is to run [main.ipynb](main.ipynb) - it includes:
+- Part 1: Control Experiment (baseline variance)
+- Part 2: Main Experiment (persona-sensitivity analysis)
+- Part 3: Variance Analysis (comparison visualizations)
+- Part 4: Standard Analyses (heatmaps, clustering)
+
+For the original simple demo, see [v1/v1_main.ipynb](v1/v1_main.ipynb).
 
 ### Basic Usage
 
@@ -220,6 +237,9 @@ Compute semantic embeddings and cosine similarity matrices using SentenceBERT.
 ### visualization.py
 Create heatmaps, 3D plots, and leaderboards to visualize consistency patterns.
 
+### variance_visualizations.py  *New in v2*
+Create variance comparison visualizations: quadrant plots, sensitivity rankings, landscape zones, and distribution comparisons.
+
 ### embedding_analysis.py
 Advanced clustering, negative similarity analysis, and statistical evaluation.
 
@@ -236,12 +256,13 @@ ConsistencyAI automatically caches intermediate results in the `logs/` directory
 ## API Keys and Providers
 
 ### OpenRouter (Recommended)
-OpenRouter provides unified access to multiple LLM providers. Get your key at [openrouter.ai](https://openrouter.ai).
+OpenRouter provides unified access to multiple LLM providers including Anthropic, Google, Meta, Mistral, and more. Get your key at [openrouter.ai](https://openrouter.ai).
 
 ### Direct Provider APIs
-For better performance with specific models, you can use direct APIs:
+For OpenAI models specifically, you can use the direct OpenAI API:
 - OpenAI: [platform.openai.com](https://platform.openai.com)
-- Google Gemini: [ai.google.dev](https://ai.google.dev)
+
+All other models are accessed via OpenRouter.
 
 ## Performance
 
@@ -250,6 +271,23 @@ The fast robust query processor can achieve:
 - 99%+ success rate with automatic retries
 - Adaptive concurrency scaling
 - Real-time progress tracking and ETA
+
+##  v2 Updates
+
+**ConsistencyAI v2** introduces significant enhancements over [v1](https://github.com/banyasp/consistencyAI):
+
+### New in v2:
+-  **Control Experiment Methodology**: Baseline within-model variance measurement
+-  **Variance Analysis Framework**: Compare persona-sensitivity vs self-consistency
+-  **Enhanced Visualizations**: New variance comparison plots (quadrant, sensitivity ranking, landscape zones)
+-  **Abstracted Plotting Module**: [`duplicity/variance_visualizations.py`](duplicity/variance_visualizations.py) for reusable visualizations
+-  **Consolidated Notebook**: Single `main.ipynb` with all experiment types
+-  **Expanded Scale**: 100 personas (vs 50), 15 topics (vs 3), 27-30 models
+-  **Simplified API Routing**: All models via OpenRouter (removed direct Gemini API)
+-  **Better Organization**: Separate `/docs` and `/results` directories
+
+**See [v1/v1_main.ipynb](v1/v1_main.ipynb)** for the original simple demo version.
+
 
 ## Citation
 

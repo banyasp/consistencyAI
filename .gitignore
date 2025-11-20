@@ -7,10 +7,17 @@ duplicity/config.py
 
 # Output files
 output/
-logs/
-*.pkl
-*.json
-*.png
+logs/**/*.pkl
+logs/**/*.json
+logs/**/incremental/
+
+# Keep results/ folder but ignore specific patterns
+!results/
+!results/*.pkl
+!results/*.json
+!results/*.png
+
+# Ignore HTML files everywhere
 *.html
 
 # Python

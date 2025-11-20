@@ -18,8 +18,11 @@ Core modules:
 - embedding_analysis: Statistical analysis and clustering of embeddings
 """
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 __author__ = "Peter Banyas, Shristi Sharma, Alistair Simmons, Atharva Vispute"
+
+# Import config module for API key management
+from . import config
 
 from .llm_tool import (
     LLMResponse,
@@ -86,12 +89,26 @@ from .central_analysis import (
     compute_central_analysis,
     print_central_analysis_summary,
 )
+from .control_experiment import (
+    load_mary_alberti_persona,
+    generate_control_queries,
+    run_control_experiment,
+)
+from .variance_analysis import (
+    compute_within_model_variance,
+    compute_across_persona_variance,
+    create_variance_comparison_visualizations,
+    generate_variance_report,
+)
 
 __all__ = [
     # Version info
     "__version__",
     "__author__",
-    
+
+    # Configuration
+    "config",
+
     # LLM Tool
     "LLMResponse",
     "LLMComparisonTool",
@@ -156,5 +173,16 @@ __all__ = [
     # Central Analysis
     "compute_central_analysis",
     "print_central_analysis_summary",
+
+    # Control Experiment
+    "load_mary_alberti_persona",
+    "generate_control_queries",
+    "run_control_experiment",
+
+    # Variance Analysis
+    "compute_within_model_variance",
+    "compute_across_persona_variance",
+    "create_variance_comparison_visualizations",
+    "generate_variance_report",
 ]
 
