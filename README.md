@@ -14,7 +14,6 @@ Get started fast with [main.ipynb](main.ipynb)!
 - **[API Reference](docs/API.md)** - Complete function documentation
 - **[Project Structure](docs/STRUCTURE.md)** - Codebase organization
 - **[Configuration Examples](docs/config.md)** - Sample configurations
-- **[Example Results](results/README.md)** - Whitehouse experiment findings
 
 ## Paper & App
 Check out our preprint here: https://arxiv.org/pdf/2510.13852
@@ -27,7 +26,7 @@ ConsistencyAI is a research tool that evaluates whether LLMs provide consistent 
 
 ### Motivation
 
-As LLMs play an increasing role in information delivery, users often rely on them without conducting independent research. This makes access to truth subject to the spin, focus, and authenticity of the LLM. In an increasingly polarized society with echo chambers, we need to ensure that AI systems don't turbocharge our discordance by providing inconsistent facts to different groups.
+As LLMs play an increasing role in information delivery, users often rely on them without conducting independent research. This makes access to truth subject to the spin, focus, and authenticity of the LLM. Ideological bias might shape everybody in one direction, but we also see a danger in **ideological variance**.  We need to ensure that AI systems don't turbocharge our discordance by providing inconsistent facts to different groups.
 
 ### Methodology
 
