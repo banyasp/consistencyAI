@@ -86,23 +86,14 @@ export OPENAI_API_KEY="your-openai-key"  # Optional for direct OpenAI API
 
 ### Option 2: Configuration File
 
-Edit `duplicity/config.py` and add your API keys:
+Edit `duplicity/.env` and add your API keys:
 
 ```python
 OPENROUTER_API_KEY = "your-openrouter-key"
 OPENAI_API_KEY = "your-openai-key"  # Optional for direct OpenAI API
 ```
 
-### Option 3: Programmatic Configuration
-
-```python
-from duplicity import config
-
-config.set_openrouter_key("your-openrouter-key")
-config.set_openai_key("your-openai-key")  # Optional for direct OpenAI API
-```
-
-**Note**: OpenRouter provides access to models from Anthropic, Google, Meta, Mistral, and others. Direct OpenAI API is only needed for OpenAI models when not using OpenRouter.
+**Note**: OpenRouter provides access to models from Anthropic, Google, Meta, Mistral, and others. OpenRouter often fails with GPT-5, therefore we encourage you to use the OpenAI API directly for those models.
 
 ## Quick Start
 
