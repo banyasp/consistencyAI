@@ -11,6 +11,9 @@ logs/**/*.pkl
 logs/**/*.json
 logs/**/incremental/
 
+# Exception: Keep Mary Alberti persona for main.ipynb to run
+!logs/control/mary_alberti_persona.json
+
 # Keep results/ folder but ignore specific patterns
 !results/
 !results/*.pkl
